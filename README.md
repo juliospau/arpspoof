@@ -1,2 +1,2 @@
 # arpspoof
-Script suplantar un host mediante respuestas ARP
+Script para suplantar un host mediante respuestas ARP
